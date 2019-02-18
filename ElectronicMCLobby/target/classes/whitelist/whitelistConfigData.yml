@@ -1,0 +1,5 @@
+# edit de config file van het whitelist systeem.
+
+Info:
+  status: "Uit"
+  message: "&c&lAanpasbaar in de whitelistConfigData.yml file."

@@ -1,0 +1,382 @@
+
+// PROFIELMANAGERGUI
+
+package me.jorandev.profileplugin.managers;
+
+
+import me.jorandev.profileplugin.api.ISGen;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+
+public class ProfielManagerGUI {
+
+    private String playername_item_name = "§6§lNaam";
+    private String playerhealth_item_name = "§6§lHealth";
+    private String playerfood_item_name = "§6§lFood";
+    public static ItemStack playername_item = null;
+    public static ItemStack playerhealth_item = null;
+    public static ItemStack playerfood_item = null;
+
+    public static String profiel_inventory_name = "§c§lPROFIEL ● ";
+
+    public void openProfiel(Player p) {
+
+        Inventory inv = Bukkit.createInventory(null, 36, profiel_inventory_name + p.getDisplayName());
+
+        ItemStack playerName = new ISGen(Material.SKULL_ITEM, 1, (short)3).setOwner(p.getDisplayName()).setDisplayName(playername_item_name).getItem();
+        ItemMeta playerName_meta = playerName.getItemMeta();
+        playerName_meta.setDisplayName(playername_item_name);
+        ArrayList<String> lore = new ArrayList<>();
+        lore.add("§7Jou spelers naam is: §3" + p.getDisplayName());
+
+        playerName_meta.setLore(lore);
+        playerName.setItemMeta(playerName_meta);
+
+        ItemStack playerHealth = new ISGen(Material.SKULL_ITEM, 1, (short)3).setOwner("heart").setDisplayName(playerhealth_item_name).getItem();
+        ItemMeta playerHealth_meta = playerHealth.getItemMeta();
+        playerHealth_meta.setDisplayName(playerhealth_item_name);
+        ArrayList<String> lore2 = new ArrayList<>();
+        lore2.add("§7Jou health is: §3" + p.getHealth());
+
+        playerHealth_meta.setLore(lore2);
+        playerHealth.setItemMeta(playerHealth_meta);
+
+        ItemStack playerFood = new ISGen(Material.SKULL_ITEM, 1, (short)3).setOwner("food").setDisplayName(playerfood_item_name).getItem();
+        ItemMeta playerFood_meta = playerFood.getItemMeta();
+        playerFood_meta.setDisplayName(playerfood_item_name);
+        ArrayList<String> lore3 = new ArrayList<>();
+        lore3.add("§7Jou food is: §3" + p.getFoodLevel());
+
+        playerFood_meta.setLore(lore3);
+        playerFood.setItemMeta(playerFood_meta);
+
+        playername_item = playerName;
+        playerhealth_item = playerHealth;
+        playerfood_item = playerFood;
+
+        inv.setItem(12, playerName);
+        inv.setItem(14, playerHealth);
+        inv.setItem(16, playerFood);
+
+        p.openInventory(inv);
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ALLLISTENERS
+
+package me.jorandev.profileplugin.listeners;
+
+import me.jorandev.profileplugin.api.Cooldown;
+import me.jorandev.profileplugin.api.ISGen;
+import me.jorandev.profileplugin.managers.ProfielManagerGUI;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.Inventory;
+
+public class ALLListeners implements Listener {
+
+    public ALLListeners() {}
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent e){
+        Player p = e.getPlayer();
+        String prefix = ChatColor.translateAlternateColorCodes('&', "&c&lPROFIEL");
+
+        if(e.getAction() == Action.RIGHT_CLICK_AIR){
+            if(e.getItem().getType() == Material.SKULL_ITEM && e.getItem().getItemMeta().getDisplayName().equals(null)) {
+                e.setCancelled(true);
+            }
+
+            if(e.getItem().getType() == Material.SKULL_ITEM && e.getItem().getItemMeta().getDisplayName().equals("§c§lProfiel")){
+
+                if(Cooldown.isInCooldown(p.getUniqueId(), "profiel")) {
+                    p.sendMessage(prefix + " §cJe moet nog §f" + Cooldown.getTimeLeft(p.getUniqueId(), "profiel")+ "§c seconden wachten om je profiel te kunnen openen!");
+                    return;
+                }else {
+                    Cooldown c = new Cooldown(p.getUniqueId(), "profiel", 3);
+                    c.start();
+
+                    p.sendMessage(prefix + " §aU hebt uw profiel geopent.");
+                    new ProfielManagerGUI().openProfiel(p);
+
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e){
+        Player p = e.getPlayer();
+
+        Inventory inv = p.getInventory();
+
+        inv.setItem(0, new ISGen(Material.SKULL_ITEM, 1, (short)3).setOwner(p.getDisplayName()).setDisplayName("§c§lProfiel").getItem());
+    }
+
+    @EventHandler
+    public void onClick(InventoryClickEvent e){
+        e.setCancelled(true);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// SETNPC
+
+package me.itsjustjoran.lobby.lobbyManager.NPCManager;
+
+import me.itsjustjoran.lobby.lobbyManager.utils.SendMessage;
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
+
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+
+public class setNPCCommand implements CommandExecutor {
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        Player p = (Player) sender;
+
+        if(cmd.getName().equalsIgnoreCase("setnpc")) {
+            if(p.hasPermission("starcraftlobby.npc.set")) {
+
+                if(args.length == 0) {
+                    SendMessage.send(p, "&c&lGebruik /setnpc <pvp, profiel, survival>");
+                    return false;
+                }
+
+                if (args.length == 1) {
+                    if (args[0].equalsIgnoreCase("pvp")) {
+                        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, "fullwall");
+
+                        npc.setName("&6&lKitPvP");
+                        npc.spawn(p.getLocation());
+//                        Bukkit.dispatchCommand(p, "npc select");
+//                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "citizens reload");
+//                        Bukkit.dispatchCommand(p, "npc skin Flash");
+//                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "citizens save");
+
+                        if (npc.isSpawned()) {
+                            SendMessage.send(p, "&cNPC SPAWNED");
+                        }
+                    } else if (args[0].equalsIgnoreCase("profiel")) {
+                        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, "fullwall");
+
+                        npc.setName("&6&lProfiel");
+                        npc.spawn(p.getLocation());
+//                        Bukkit.dispatchCommand(p, "npc select");
+//                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "citizens reload");
+//                        Bukkit.dispatchCommand(p, "npc skin CaneHD18");
+//                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "citizens save");
+
+                        if (npc.isSpawned()) {
+                            SendMessage.send(p, "&cNPC SPAWNED");
+                        }
+                    } else if (args[0].equalsIgnoreCase("survival")) {
+                        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, "fullwall");
+
+                        npc.setName("&6&lSurvival");
+                        npc.spawn(p.getLocation());
+//                        Bukkit.dispatchCommand(p, "npc select");
+//                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "citizens reload");
+//                        Bukkit.dispatchCommand(p, "npc skin qLili_");
+//                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "citizens save");
+
+                        if (npc.isSpawned()) {
+                            SendMessage.send(p, "&cNPC SPAWNED");
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+}
+
+
+
+
+
+// ONTHOUDE / MINETOPIA
+if (npc.getName().equalsIgnoreCase("&1M&9inetopia")) {
+   send(player, "minetopia");
+   ChatUtils.sendMessage(player, "&c&lU wordt verstuurd naar de Minetopia server.");
+}
+
+
+// CLICKEVENTSNPC
+
+package me.itsjustjoran.lobby.lobbyManager.NPCManager.Events;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+
+import me.itsjustjoran.lobby.Lobby;
+import me.itsjustjoran.lobby.lobbyManager.GUIManager.profielGUIManager;
+import me.itsjustjoran.lobby.lobbyManager.utils.Constants;
+import me.itsjustjoran.lobby.lobbyManager.utils.SendMessage;
+import net.citizensnpcs.api.event.NPCLeftClickEvent;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
+import net.citizensnpcs.api.npc.NPC;
+
+public class ClickEventOnNPC implements Listener {
+
+    public ClickEventOnNPC() {}
+
+    @EventHandler
+    public void NPCClickEvent(NPCLeftClickEvent event) {
+        Player p = event.getClicker();
+        NPC npc = event.getNPC();
+
+
+        if (npc.getName().equalsIgnoreCase("&6&lKitPvP")) {
+            send(p, "pvp");
+            SendMessage.send(p, ChatColor.translateAlternateColorCodes('&', "&c&lU wordt verstuurd naar de KitPvP server."));
+        } else if (npc.getName().equalsIgnoreCase("&6&lProfiel")) {
+            new profielGUIManager().openProfiel(p);
+            p.sendMessage(ChatColor.translateAlternateColorCodes('&', Constants.prefix + "&aU opent je &b&lProfiel&a."));
+        } else if (npc.getName().equalsIgnoreCase("&6&lProfiel")) {
+            new profielGUIManager().openProfiel(p);
+            p.sendMessage(ChatColor.translateAlternateColorCodes('&', Constants.prefix + "&aU opent je &b&lProfiel&a."));
+        } else if (npc.getName().equalsIgnoreCase("&6&lSurvival")) {
+            send(p, "survival");
+            SendMessage.send(p, ChatColor.translateAlternateColorCodes('&', "&c&lU wordt verstuurd naar de Survival server."));
+        }
+    }
+
+    @EventHandler
+    public void NPCClickEvent(NPCRightClickEvent event) {
+        Player p = event.getClicker();
+        NPC npc = event.getNPC();
+
+
+        if (npc.getName().equalsIgnoreCase("&6&lKitPvP")) {
+            send(p, "pvp");
+            SendMessage.send(p, ChatColor.translateAlternateColorCodes('&', "&c&lU wordt verstuurd naar de KitPvP server."));
+        } else if (npc.getName().equalsIgnoreCase("&6&lProfiel")) {
+            new profielGUIManager().openProfiel(p);
+            p.sendMessage(ChatColor.translateAlternateColorCodes('&', Constants.prefix + "&aU opent je &b&lProfiel&a."));
+        } else if (npc.getName().equalsIgnoreCase("&6&lProfiel")) {
+            new profielGUIManager().openProfiel(p);
+            p.sendMessage(ChatColor.translateAlternateColorCodes('&', Constants.prefix + "&aU opent je &b&lProfiel&a."));
+        } else if (npc.getName().equalsIgnoreCase("&6&lSurvival")) {
+            send(p, "survival");
+            SendMessage.send(p, ChatColor.translateAlternateColorCodes('&', "&c&lU wordt verstuurd naar de Survival server."));
+        }
+    }
+
+    private void send(Player p, String server){
+        try {
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF("Connect");
+            out.writeUTF(server);
+            p.sendPluginMessage(Lobby.getPlugin(Lobby.class), "BungeeCord", out.toByteArray());
+        } catch (Exception e) {
+            Bukkit.getLogger().info("You'll never see me!");
+        }
+    }
+}
+
+
+
+
+// INVENTORYCLICKEVENT
+
+@EventHandler
+    public void onInventoryClickEvent(InventoryClickEvent event) {
+        Player p = (Player) event.getWhoClicked();
+        String title = event.getInventory().getTitle();
+
+//        event.setCancelled(true);
+
+
+        if (title.equalsIgnoreCase(serverSelectorGUIManager.selector_inventory_name)) {
+            event.setCancelled(true);
+
+//            if(p.getInventory().getItem(event.getSlot()) == null) return;
+
+            if (event.getClickedInventory().getItem(event.getSlot()).isSimilar(serverSelectorGUIManager.pvp_item)) {
+                send(p, "pvp");
+                p.sendMessage(Constants.prefix + PlayerJoinQuitListener.send_to_server_message + serverSelectorGUIManager.pvp_item_name);
+            } else if (event.getClickedInventory().getItem(event.getSlot()).isSimilar(serverSelectorGUIManager.survival_item)) {
+                send(p, "survival");
+                p.sendMessage(Constants.prefix + PlayerJoinQuitListener.send_to_server_message + serverSelectorGUIManager.survival_item_name);
+            } else if (event.getClickedInventory().getItem(event.getSlot()).isSimilar(serverSelectorGUIManager.devserver_item)) {
+                if(p.hasPermission("starcraftlobby.gui.evenementen")) {
+                    p.sendMessage(Constants.prefix + PlayerJoinQuitListener.page_send_message + serverSelectorGUIManager.devserver_item_name);
+                }else {
+                    p.sendMessage(Constants.prefix + PlayerJoinQuitListener.only_for_admin_message);
+                    p.closeInventory();
+                }
+            }
+        }
+    }
+
+    private void send(Player p, String server){
+        try {
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF("Connect");
+            out.writeUTF(server);
+            p.sendPluginMessage(Lobby.getPlugin(Lobby.class), "BungeeCord", out.toByteArray());
+        } catch (Exception e) {
+            Bukkit.getLogger().info("You'll never see me!");
+        }
+    }

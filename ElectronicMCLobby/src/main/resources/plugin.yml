@@ -1,0 +1,10 @@
+name: ElectronicMCLobby
+version: 1.0.0
+main: me.joran.electronicmc.ElectronicMCLobby
+authors: [ItsJustJoran]
+description: De ElectronicMc Lobby plugin.
+commands:
+  electroniclobby:
+    description: De ElectronicMCLobby main command
+    aliases: [eleclobby, electrolobby, emclobby, lobby]
+  test:
